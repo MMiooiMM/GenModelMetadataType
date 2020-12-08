@@ -30,13 +30,82 @@ namespace GenModelMetadataType
 
         private static void Main(string[] args)
         {
-            var assembly = GetAssembly(@"..\..\..\..\..\ASPNETCore5ModelMetadataType\WebApplication4\bin\Debug\net5.0", "WebApplication4");
+            var projectInfo = GetAssemblyPathInfo();
+
+            var assembly = GetAssembly(projectInfo.path, projectInfo.name);
 
             var types = GetEntityTypesFromAssembly(assembly);
 
             CreateFiles(types);
 
             Console.WriteLine("Done.");
+        }
+
+        /// <summary>
+        /// 取得 Assembly 位置訊息
+        /// </summary>
+        /// <returns></returns>
+        private static (string path, string name) GetAssemblyPathInfo()
+        {
+            string path = GetProjectRootDirectory();
+
+            return ($"{path}\\bin\\Debug\\net5.0", GetLastDirectory(path));
+        }
+
+        /// <summary>
+        /// 取得專案根目錄的完整路徑
+        /// </summary>
+        /// <returns></returns>
+        private static string GetProjectRootDirectory()
+        {
+            var path = Directory.GetCurrentDirectory();
+
+            while (!CheckIfContainBinDirectory(path) || !CheckIfContainCsprojFile(path))
+            {
+                path = GetUpperDirectory(path);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// 檢查是否包含 bin 資料夾
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static bool CheckIfContainBinDirectory(string path)
+        {
+            return Directory.GetDirectories(path).Any(d => GetLastDirectory(d) == "bin");
+        }
+
+        /// <summary>
+        /// 檢查是否包含 Csproj 檔案
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static bool CheckIfContainCsprojFile(string path)
+        {
+            return Directory.GetFiles(path).Any(d => d.Contains(".csproj"));
+        }
+
+        /// <summary>
+        /// 取得路徑中上一層資料夾的完整路徑
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static string GetUpperDirectory(string path)
+        {
+            return string.Join('\\', path.Split('\\')[0..^1]);
+        }
+
+        /// <summary>
+        /// 取得路徑中最後一個資料夾名稱
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static string GetLastDirectory(string path)
+        {
+            return path.Split('\\')[^1];
         }
 
         /// <summary>
@@ -133,8 +202,10 @@ namespace GenModelMetadataType
                 var fileName = $"{type.Name}.Partial.cs";
                 var fileContent = GeneratePartialCodeContent(type);
 
-                using StreamWriter sw = new StreamWriter($"{Environment.CurrentDirectory}\\{fileName}");
+                using StreamWriter sw = new StreamWriter($"{Directory.GetCurrentDirectory()}\\{fileName}");
                 sw.Write(fileContent);
+
+                Console.WriteLine($"create {fileName}.");
             }
         }
 
