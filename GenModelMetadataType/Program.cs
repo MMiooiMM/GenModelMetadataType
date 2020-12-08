@@ -46,11 +46,11 @@ namespace GenModelMetadataType
 
             string dbContextName = args[0];
 
-            var path = GetAssemblyPath();
+            var assemblyPathInfo = GetAssemblyPathInfo();
 
-            var assembly = GetAssembly(path, dbContextName);
+            var assembly = GetAssembly(assemblyPathInfo.path, assemblyPathInfo.name);
 
-            var types = GetEntityTypesFromAssembly(assembly);
+            var types = GetEntityTypesFromAssembly(assembly, dbContextName);
 
             CreateFiles(types);
 
@@ -61,11 +61,11 @@ namespace GenModelMetadataType
         /// 取得 Assembly 位置訊息
         /// </summary>
         /// <returns></returns>
-        private static string GetAssemblyPath()
+        private static (string path, string name) GetAssemblyPathInfo()
         {
             string path = GetProjectRootDirectory();
 
-            return $"{path}\\bin\\Debug\\net5.0";
+            return ($"{path}\\bin\\Debug\\net5.0", GetLastPath(path));
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace GenModelMetadataType
         /// <returns></returns>
         private static bool CheckIfContainBinDirectory(string path)
         {
-            return Directory.GetDirectories(path).Any(d => GetLastDirectory(d) == "bin");
+            return Directory.GetDirectories(path).Any(d => GetLastPath(d) == "bin");
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace GenModelMetadataType
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        private static string GetLastDirectory(string path)
+        private static string GetLastPath(string path)
         {
             return path.Split('\\')[^1];
         }
@@ -148,9 +148,9 @@ namespace GenModelMetadataType
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        private static IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly)
+        private static IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string dbContextName)
         {
-            return GetDbContextTypeFromAssembly(assembly)
+            return GetDbContextTypeFromAssembly(assembly, dbContextName)
                 .GetProperties()
                 .Where(prop => CheckIfDbSetGenericType(prop.PropertyType))
                 .Select(type => type.PropertyType.GetGenericArguments()[0]);
@@ -161,7 +161,7 @@ namespace GenModelMetadataType
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        private static Type GetDbContextTypeFromAssembly(Assembly assembly)
+        private static Type GetDbContextTypeFromAssembly(Assembly assembly, string dbContextName)
         {
             string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
 
@@ -171,7 +171,7 @@ namespace GenModelMetadataType
             }
             catch (ReflectionTypeLoadException e)
             {
-                return e.Types.FirstOrDefault(t => t.BaseType.FullName.Contains(dbContextFullName) && t.IsPublic);
+                return e.Types.FirstOrDefault(t => t.BaseType.FullName.Contains(dbContextFullName) && GetFullName(t).Equals(dbContextName));
             }
         }
 
