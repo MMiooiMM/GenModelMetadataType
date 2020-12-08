@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using GenModelMetadataType.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GenModelMetadataType
 {
@@ -24,18 +25,16 @@ namespace GenModelMetadataType
 
             string dbContextName = args[0];
 
-            IPathService pathService = new PathService();
-            IFileService fileService = new FileService();
+            var serviceProvider = new ServiceCollection()
+                .AddTransient<App>(x => new App(
+                    x.GetRequiredService<IPathService>(),
+                    x.GetRequiredService<IFileService>(),
+                    dbContextName))
+                .AddTransient<IPathService, PathService>()
+                .AddTransient<IFileService, FileService>()
+                .BuildServiceProvider();
 
-            var (path, name) = pathService.GetAssemblyPathInfo();
-
-            var assembly = fileService.GetAssembly(path, name);
-
-            var types = fileService.GetEntityTypesFromAssembly(assembly, dbContextName);
-
-            fileService.CreateFiles(types);
-
-            Console.WriteLine("Done.");
+            serviceProvider.GetRequiredService<App>().Run();
         }
     }
 }
