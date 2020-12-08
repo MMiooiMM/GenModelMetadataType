@@ -29,7 +29,7 @@ namespace GenModelMetadataType
         };
 
         private static void Main(string[] args)
-        {
+        {            
             var projectInfo = GetAssemblyPathInfo();
 
             var assembly = GetAssembly(projectInfo.path, projectInfo.name);
@@ -176,7 +176,7 @@ namespace GenModelMetadataType
         /// <returns></returns>
         private static string GetFullName(Type type)
         {
-            if (!type.IsGenericType) return type.Name;
+            if (!type.IsGenericType) return GetTypeAliasOrName(type);
 
             StringBuilder sb = new StringBuilder();
 
@@ -242,7 +242,7 @@ namespace GenModelMetadataType
                     continue;
                 }
                 sb.AppendLine("        // [Required]");
-                sb.AppendLine($"        public {GetTypeAliasOrName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
+                sb.AppendLine($"        public {GetFullName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
             }
 
             sb.AppendLine("    }");
