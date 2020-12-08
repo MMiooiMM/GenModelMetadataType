@@ -2,6 +2,8 @@
 using System.Reflection;
 using GenModelMetadataType.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace GenModelMetadataType
 {
@@ -25,16 +27,22 @@ namespace GenModelMetadataType
 
             string dbContextName = args[0];
 
-            var serviceProvider = new ServiceCollection()
-                .AddTransient<App>(x => new App(
+            var builder = new HostBuilder().ConfigureServices((hostContext, services) =>
+            {
+                services.AddTransient<App>(x => new App(
                     x.GetRequiredService<IPathService>(),
                     x.GetRequiredService<IFileService>(),
-                    dbContextName))
-                .AddTransient<IPathService, PathService>()
-                .AddTransient<IFileService, FileService>()
-                .BuildServiceProvider();
+                    dbContextName));
+                services.AddTransient<IPathService, PathService>();
+                services.AddTransient<IFileService, FileService>();
 
-            serviceProvider.GetRequiredService<App>().Run();
+                services.AddLogging(builder =>
+                {
+                    builder.AddConsole();
+                });
+            });
+
+            builder.Build().Services.GetRequiredService<App>().Run();
         }
     }
 }

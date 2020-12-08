@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace GenModelMetadataType.Services
 {
@@ -27,6 +28,13 @@ namespace GenModelMetadataType.Services
             { typeof(ulong), "ulong" },
             { typeof(void), "void" }
         };
+
+        private readonly ILogger<FileService> logger;
+
+        public FileService(ILogger<FileService> logger)
+        {
+            this.logger = logger;
+        }
 
         public Assembly GetAssembly(string path, string name)
         {
@@ -59,7 +67,7 @@ namespace GenModelMetadataType.Services
                 using StreamWriter sw = new StreamWriter($"{Directory.GetCurrentDirectory()}\\{fileName}");
                 sw.Write(fileContent);
 
-                Console.WriteLine($"create {fileName}.");
+                logger.LogInformation($"create {fileName}.");
             }
         }
 
