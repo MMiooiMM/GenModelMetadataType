@@ -29,10 +29,12 @@ namespace GenModelMetadataType
 
             var builder = new HostBuilder().ConfigureServices((hostContext, services) =>
             {
-                services.AddTransient<App>(x => new App(
-                    x.GetRequiredService<IPathService>(),
-                    x.GetRequiredService<IFileService>(),
-                    dbContextName));
+                services.AddSingleton<Argument>(x => new Argument
+                {
+                    DbContextName = dbContextName
+                });
+
+                services.AddTransient<App>();
                 services.AddTransient<IPathService, PathService>();
                 services.AddTransient<IFileService, FileService>();
 

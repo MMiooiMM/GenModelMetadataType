@@ -30,13 +30,32 @@ namespace GenModelMetadataType.Services
         };
 
         private readonly ILogger<FileService> logger;
+        private readonly Argument argument;
 
-        public FileService(ILogger<FileService> logger)
+        public FileService(ILogger<FileService> logger, Argument argument)
         {
             this.logger = logger;
+            this.argument = argument;
         }
 
-        public Assembly GetAssembly(string path, string name)
+        public void CreatePartialFiles(string path, string name)
+        {
+            var assembly = GetAssembly(path, name);
+
+            var types = GetEntityTypesFromAssembly(assembly, argument.DbContextName);
+
+            CreateFiles(types);
+        }
+
+        #region private function
+
+        /// <summary>
+        /// 取得 Assembly
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private Assembly GetAssembly(string path, string name)
         {
             string localPath = string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : path;
             string assemblyFilePath = Path.Combine(localPath, $"{name}.dll");
@@ -49,7 +68,12 @@ namespace GenModelMetadataType.Services
             return Assembly.LoadFrom(assemblyFilePath);
         }
 
-        public IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string dbContextName)
+        /// <summary>
+        /// 從 Assembly 取得所有 Entity 的 Type
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
+        private IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string dbContextName)
         {
             return GetDbContextTypeFromAssembly(assembly, dbContextName)
                 .GetProperties()
@@ -57,7 +81,11 @@ namespace GenModelMetadataType.Services
                 .Select(type => type.PropertyType.GetGenericArguments()[0]);
         }
 
-        public void CreateFiles(IEnumerable<Type> types)
+        /// <summary>
+        /// 新增檔案
+        /// </summary>
+        /// <param name="types"></param>
+        private void CreateFiles(IEnumerable<Type> types)
         {
             foreach (var type in types)
             {
@@ -70,8 +98,6 @@ namespace GenModelMetadataType.Services
                 logger.LogInformation($"create {fileName}.");
             }
         }
-
-        #region private function
 
         /// <summary>
         /// 從 Assembly 取得 DbContext 的 Type
@@ -176,6 +202,6 @@ namespace GenModelMetadataType.Services
             return typeAlias.TryGetValue(type, out string alias) ? alias : type.Name;
         }
 
-        #endregion
+        #endregion private function
     }
 }
