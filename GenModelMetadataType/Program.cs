@@ -29,10 +29,26 @@ namespace GenModelMetadataType
         };
 
         private static void Main(string[] args)
-        {            
-            var projectInfo = GetAssemblyPathInfo();
+        {
+            if (args.Length == 0)
+            {
+                var versionString = Assembly.GetEntryAssembly()
+                                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                        .InformationalVersion
+                                        .ToString();
 
-            var assembly = GetAssembly(projectInfo.path, projectInfo.name);
+                Console.WriteLine($"genmodelmetadata v{versionString}");
+                Console.WriteLine("-------------");
+                Console.WriteLine("\nUsage:");
+                Console.WriteLine("  genmodelmetadata <dbcontext-name>");
+                return;
+            }
+
+            string dbContextName = args[0];
+
+            var path = GetAssemblyPath();
+
+            var assembly = GetAssembly(path, dbContextName);
 
             var types = GetEntityTypesFromAssembly(assembly);
 
@@ -45,11 +61,11 @@ namespace GenModelMetadataType
         /// 取得 Assembly 位置訊息
         /// </summary>
         /// <returns></returns>
-        private static (string path, string name) GetAssemblyPathInfo()
+        private static string GetAssemblyPath()
         {
             string path = GetProjectRootDirectory();
 
-            return ($"{path}\\bin\\Debug\\net5.0", GetLastDirectory(path));
+            return $"{path}\\bin\\Debug\\net5.0";
         }
 
         /// <summary>
