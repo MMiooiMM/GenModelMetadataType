@@ -114,7 +114,8 @@ namespace GenModelMetadataType.Services
             }
             catch (ReflectionTypeLoadException e)
             {
-                return e.Types.FirstOrDefault(t => t.BaseType.FullName.Contains(dbContextFullName) && GetFullName(t).Equals(dbContextName));
+                return e.Types.FirstOrDefault(t => t.BaseType.FullName.Contains(dbContextFullName)
+                        && GetFullName(t).Equals(dbContextName));
             }
         }
 
@@ -135,7 +136,7 @@ namespace GenModelMetadataType.Services
         /// <returns></returns>
         private string GetFullName(Type type)
         {
-            if (!type.IsGenericType) return GetTypeAliasOrName(type);
+            if (!type.IsGenericType) return type.Name;
 
             StringBuilder sb = new StringBuilder();
 
@@ -183,7 +184,7 @@ namespace GenModelMetadataType.Services
                     continue;
                 }
                 sb.AppendLine("        // [Required]");
-                sb.AppendLine($"        public {GetFullName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
+                sb.AppendLine($"        public {GetTypeAliasOrName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
             }
 
             sb.AppendLine("    }");
@@ -199,7 +200,15 @@ namespace GenModelMetadataType.Services
         /// <returns></returns>
         private string GetTypeAliasOrName(Type type)
         {
-            return typeAlias.TryGetValue(type, out string alias) ? alias : type.Name;
+            if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+            {
+                var t = type.GetGenericArguments()[0];
+                return (typeAlias.TryGetValue(t, out string alias) ? alias : t.Name) + "?";
+            }
+            else
+            {
+                return typeAlias.TryGetValue(type, out string alias) ? alias : type.Name;
+            }
         }
 
         #endregion private function
