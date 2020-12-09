@@ -10,6 +10,8 @@ namespace GenModelMetadataType.Services
 {
     public class FileService : IFileService
     {
+        private static readonly string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
+
         private static readonly Dictionary<Type, string> typeAlias = new Dictionary<Type, string>
         {
             { typeof(bool), "bool" },
@@ -112,8 +114,6 @@ namespace GenModelMetadataType.Services
             }
             catch (ReflectionTypeLoadException e)
             {
-                string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
-
                 var dbContextType = e.Types.Where(t => t.BaseType.FullName.Contains(dbContextFullName));
 
                 var args = Environment.GetCommandLineArgs();
@@ -185,12 +185,8 @@ namespace GenModelMetadataType.Services
             sb.AppendLine($"    internal class {type.Name}Metadata");
             sb.AppendLine("    {");
 
-            foreach (var prop in type.GetProperties())
+            foreach (var prop in type.GetProperties().Where(t => !t.GetGetMethod().IsVirtual))
             {
-                if (prop.GetGetMethod().IsVirtual)
-                {
-                    continue;
-                }
                 sb.AppendLine("        // [Required]");
                 sb.AppendLine($"        public {GetTypeAliasOrName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
             }
