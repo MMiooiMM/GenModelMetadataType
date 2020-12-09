@@ -30,19 +30,19 @@ namespace GenModelMetadataType.Services
         };
 
         private readonly ILogger<FileService> logger;
-        private readonly Argument argument;
 
-        public FileService(ILogger<FileService> logger, Argument argument)
+        public FileService(ILogger<FileService> logger)
         {
             this.logger = logger;
-            this.argument = argument;
         }
 
         public void CreatePartialFiles(string path, string name)
         {
+            var args = Environment.GetCommandLineArgs();
+
             var assembly = GetAssembly(path, name);
 
-            var types = GetEntityTypesFromAssembly(assembly, argument.DbContextName);
+            var types = GetEntityTypesFromAssembly(assembly, args[1]);
 
             CreateFiles(types);
         }
