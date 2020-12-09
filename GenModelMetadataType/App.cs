@@ -35,10 +35,10 @@ namespace GenModelMetadataType
             {
                 logger.LogWarning("Worker running at: {time}", DateTimeOffset.Now);
 
-                var (path, name) = pathService.GetAssemblyPathInfo();
+                var (path, name) = pathService.GetAssemblyFileInfo();
 
-                fileService.CreatePartialFiles(path, name);                
-                
+                fileService.CreatePartialFiles(path, name);
+
                 _exitCode = 1;
             }
             catch (Exception ex)

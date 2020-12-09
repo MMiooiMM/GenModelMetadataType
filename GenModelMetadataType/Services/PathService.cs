@@ -5,7 +5,7 @@ namespace GenModelMetadataType.Services
 {
     public class PathService : IPathService
     {
-        public (string path, string name) GetAssemblyPathInfo()
+        public (string path, string name) GetAssemblyFileInfo()
         {
             string path = GetProjectRootDirectory();
 

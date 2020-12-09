@@ -38,11 +38,9 @@ namespace GenModelMetadataType.Services
 
         public void CreatePartialFiles(string path, string name)
         {
-            var args = Environment.GetCommandLineArgs();
-
             var assembly = GetAssembly(path, name);
 
-            var types = GetEntityTypesFromAssembly(assembly, args[1]);
+            var types = GetEntityTypesFromAssembly(assembly);
 
             CreateFiles(types);
         }
@@ -57,7 +55,9 @@ namespace GenModelMetadataType.Services
         /// <returns></returns>
         private Assembly GetAssembly(string path, string name)
         {
-            string localPath = string.IsNullOrEmpty(path) ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : path;
+            string localPath = string.IsNullOrEmpty(path)
+                ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+                : path;
             string assemblyFilePath = Path.Combine(localPath, $"{name}.dll");
 
             if (!File.Exists(assemblyFilePath))
@@ -73,9 +73,9 @@ namespace GenModelMetadataType.Services
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        private IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string dbContextName)
+        private IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly)
         {
-            return GetDbContextTypeFromAssembly(assembly, dbContextName)
+            return GetDbContextTypeFromAssembly(assembly)
                 .GetProperties()
                 .Where(prop => CheckIfDbSetGenericType(prop.PropertyType))
                 .Select(type => type.PropertyType.GetGenericArguments()[0]);
@@ -104,18 +104,26 @@ namespace GenModelMetadataType.Services
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        private Type GetDbContextTypeFromAssembly(Assembly assembly, string dbContextName)
+        private Type GetDbContextTypeFromAssembly(Assembly assembly)
         {
-            string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
-
             try
             {
                 return assembly.GetTypes().FirstOrDefault();
             }
             catch (ReflectionTypeLoadException e)
             {
-                return e.Types.FirstOrDefault(t => t.BaseType.FullName.Contains(dbContextFullName)
-                        && GetFullName(t).Equals(dbContextName));
+                string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
+
+                var dbContextType = e.Types.Where(t => t.BaseType.FullName.Contains(dbContextFullName));
+
+                var args = Environment.GetCommandLineArgs();
+                if (args.Length > 1)
+                {
+                    var specifyDbContextName = args[1];
+                    dbContextType.Where(t => t.FullName.Equals(specifyDbContextName));
+                }
+
+                return dbContextType.FirstOrDefault();
             }
         }
 

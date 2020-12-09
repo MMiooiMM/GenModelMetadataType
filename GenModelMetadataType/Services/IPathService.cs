@@ -3,9 +3,9 @@
     public interface IPathService
     {
         /// <summary>
-        /// 取得 Assembly 位置訊息
+        /// 取得 Assembly 檔案訊息
         /// </summary>
         /// <returns></returns>
-        public (string path, string name) GetAssemblyPathInfo();
+        public (string path, string name) GetAssemblyFileInfo();
     }
 }
