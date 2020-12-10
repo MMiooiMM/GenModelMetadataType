@@ -1,4 +1,6 @@
-﻿using GenModelMetadataType.Services;
+﻿using System.Collections.Generic;
+using GenModelMetadataType.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,19 @@ namespace GenModelMetadataType
                 {
                     configLogging.AddConsole();
                     configLogging.AddDebug();
-                });
+                })
+            .ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                var switchMappings = new Dictionary<string, string>()
+                    {
+                        { "-c", "context" },
+                        { "--context", "context" },
+                        { "-p", "project" },
+                        { "--project", "project" },
+                        { "-o", "outputDir" },
+                        { "--output-dir", "outputDir" }
+                    };
+                config.AddCommandLine(args, switchMappings);
+            });
     }
 }

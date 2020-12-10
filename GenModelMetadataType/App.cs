@@ -19,14 +19,17 @@ namespace GenModelMetadataType
         private readonly ILogger<App> logger;
         private readonly IHostApplicationLifetime appLifetime;
         private readonly IFileService fileService;
+        private readonly IConfiguration configuration;
 
         public App(ILogger<App> logger,
                    IHostApplicationLifetime appLifetime,
-                   IFileService fileService)
+                   IFileService fileService,
+                   IConfiguration configuration)
         {
             this.logger = logger;
             this.appLifetime = appLifetime;
             this.fileService = fileService;
+            this.configuration = configuration;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -35,7 +38,7 @@ namespace GenModelMetadataType
             {
                 logger.LogWarning("Worker running at: {time}", DateTimeOffset.Now);
 
-                var (projectFile, startupProjectFile) = ResolveProjects(null, null);
+                var projectFile = ResolveProject(configuration["project"]);
 
                 var project = Project.FromFile(projectFile, null);
 
@@ -69,69 +72,34 @@ namespace GenModelMetadataType
             return Task.CompletedTask;
         }
 
-        private (string, string) ResolveProjects(
-            string projectPath,
-            string startupProjectPath)
+        private string ResolveProject(string projectPath)
         {
-            var projects = ResolveProjects(projectPath);
-            var startupProjects = ResolveProjects(startupProjectPath);
+            var projects = GetProjectFiles(projectPath);
 
-            if (projects.Count > 1)
+            return projects.Count switch
             {
-                throw new Exception(
-                    projectPath != null
-                        ? Resources.MultipleProjectsInDirectory(projectPath)
-                        : Resources.MultipleProjects);
-            }
-
-            if (startupProjects.Count > 1)
-            {
-                throw new Exception(
-                    startupProjectPath != null
-                        ? Resources.MultipleProjectsInDirectory(startupProjectPath)
-                        : Resources.MultipleStartupProjects);
-            }
-
-            if (projectPath != null
-                && projects.Count == 0)
-            {
-                throw new Exception(Resources.NoProjectInDirectory(projectPath));
-            }
-
-            if (startupProjectPath != null
-                && startupProjects.Count == 0)
-            {
-                throw new Exception(Resources.NoProjectInDirectory(startupProjectPath));
-            }
-
-            if (projectPath == null
-                && startupProjectPath == null)
-            {
-                return projects.Count == 0
-                    ? throw new Exception(Resources.NoProject)
-                    : (projects[0], startupProjects[0]);
-            }
-
-            if (projects.Count == 0)
-            {
-                return (startupProjects[0], startupProjects[0]);
-            }
-
-            if (startupProjects.Count == 0)
-            {
-                return (projects[0], projects[0]);
-            }
-
-            return (projects[0], startupProjects[0]);
+                0 => throw new Exception(projectPath != null
+                    ? Resources.NoProjectInDirectory(projectPath)
+                    : Resources.NoProject),
+                > 1 => throw new Exception(projectPath != null
+                    ? Resources.MultipleProjectsInDirectory(projectPath)
+                    : Resources.MultipleProjects),
+                _ => projects[0],
+            };
         }
 
-        private List<string> ResolveProjects(string path)
+        private List<string> GetProjectFiles(string path)
         {
             if (path == null)
             {
                 path = Directory.GetCurrentDirectory();
             }
-            else if (!Directory.Exists(path))
+            else if (!Path.IsPathRooted(path))
+            {
+                path = Path.Combine(Directory.GetCurrentDirectory(), path);
+            }
+
+            if (!Directory.Exists(path))
             {
                 return new List<string> { path };
             }

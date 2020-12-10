@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GenModelMetadataType.Services
@@ -13,10 +14,12 @@ namespace GenModelMetadataType.Services
         private static readonly string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
 
         private readonly ILogger<FileService> logger;
+        private readonly IConfiguration configuration;
 
-        public FileService(ILogger<FileService> logger)
+        public FileService(ILogger<FileService> logger, IConfiguration configuration)
         {
             this.logger = logger;
+            this.configuration = configuration;
         }
 
         public void CreatePartialFiles(string path, string name)
@@ -25,7 +28,7 @@ namespace GenModelMetadataType.Services
 
             var types = GetEntityTypesFromAssembly(assembly);
 
-            CreateFiles(path, types);
+            CreateFiles(types);
         }
 
         #region private function
@@ -67,16 +70,22 @@ namespace GenModelMetadataType.Services
         /// <summary>
         /// 新增檔案
         /// </summary>
-        /// <param name="path"></param>
         /// <param name="types"></param>
-        private void CreateFiles(string path, IEnumerable<Type> types)
+        private void CreateFiles(IEnumerable<Type> types)
         {
+            var outputDir = Path.Combine(Directory.GetCurrentDirectory(), configuration["outputDir"]);
+
+            if (!Directory.Exists(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+
             foreach (var type in types)
             {
                 var fileName = $"{type.Name}.Partial.cs";
                 var fileContent = GeneratePartialCodeContent(type);
 
-                using StreamWriter sw = new StreamWriter(Path.Combine(path, fileName));
+                using StreamWriter sw = new StreamWriter(Path.Combine(outputDir, fileName));
                 sw.Write(fileContent);
 
                 logger.LogInformation($"create {fileName}.");
@@ -98,11 +107,10 @@ namespace GenModelMetadataType.Services
             {
                 var dbContextType = e.Types.Where(t => t.BaseType.FullName.Contains(dbContextFullName));
 
-                var args = Environment.GetCommandLineArgs();
-                if (args.Length > 1)
+                var specifyDbContextName = configuration["context"];
+                if (string.IsNullOrWhiteSpace(specifyDbContextName))
                 {
-                    var specifyDbContextName = args[1];
-                    dbContextType.Where(t => t.FullName.Equals(specifyDbContextName));
+                    dbContextType = dbContextType.Where(t => t.FullName.Equals(specifyDbContextName));
                 }
 
                 return dbContextType.FirstOrDefault();
