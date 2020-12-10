@@ -25,7 +25,7 @@ namespace GenModelMetadataType.Services
 
             var types = GetEntityTypesFromAssembly(assembly);
 
-            CreateFiles(types);
+            CreateFiles(path, types);
         }
 
         #region private function
@@ -41,7 +41,7 @@ namespace GenModelMetadataType.Services
             string localPath = string.IsNullOrEmpty(path)
                 ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
                 : path;
-            string assemblyFilePath = Path.Combine(localPath, $"{name}.dll");
+            string assemblyFilePath = Path.Combine(localPath, name);
 
             if (!File.Exists(assemblyFilePath))
             {
@@ -67,15 +67,16 @@ namespace GenModelMetadataType.Services
         /// <summary>
         /// 新增檔案
         /// </summary>
+        /// <param name="path"></param>
         /// <param name="types"></param>
-        private void CreateFiles(IEnumerable<Type> types)
+        private void CreateFiles(string path, IEnumerable<Type> types)
         {
             foreach (var type in types)
             {
                 var fileName = $"{type.Name}.Partial.cs";
                 var fileContent = GeneratePartialCodeContent(type);
 
-                using StreamWriter sw = new StreamWriter($"{Directory.GetCurrentDirectory()}\\{fileName}");
+                using StreamWriter sw = new StreamWriter(Path.Combine(path, fileName));
                 sw.Write(fileContent);
 
                 logger.LogInformation($"create {fileName}.");

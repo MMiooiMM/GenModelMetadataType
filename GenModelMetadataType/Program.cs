@@ -17,7 +17,6 @@ namespace GenModelMetadataType
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<App>();
-                    services.AddTransient<IPathService, PathService>();
                     services.AddTransient<IFileService, FileService>();
                 })
                 .ConfigureLogging((hostContext, configLogging) =>
