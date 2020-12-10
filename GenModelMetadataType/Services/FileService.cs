@@ -12,25 +12,6 @@ namespace GenModelMetadataType.Services
     {
         private static readonly string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
 
-        private static readonly Dictionary<Type, string> typeAlias = new Dictionary<Type, string>
-        {
-            { typeof(bool), "bool" },
-            { typeof(byte), "byte" },
-            { typeof(char), "char" },
-            { typeof(decimal), "decimal" },
-            { typeof(double), "double" },
-            { typeof(float), "float" },
-            { typeof(int), "int" },
-            { typeof(long), "long" },
-            { typeof(object), "object" },
-            { typeof(sbyte), "sbyte" },
-            { typeof(short), "short" },
-            { typeof(string), "string" },
-            { typeof(uint), "uint" },
-            { typeof(ulong), "ulong" },
-            { typeof(void), "void" }
-        };
-
         private readonly ILogger<FileService> logger;
 
         public FileService(ILogger<FileService> logger)
@@ -188,31 +169,13 @@ namespace GenModelMetadataType.Services
             foreach (var prop in type.GetProperties().Where(t => !t.GetGetMethod().IsVirtual))
             {
                 sb.AppendLine("        // [Required]");
-                sb.AppendLine($"        public {GetTypeAliasOrName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
+                sb.AppendLine($"        public {GetFullName(prop.PropertyType)} {prop.Name} {{ get; set; }}");
             }
 
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// 取得原始型別的別名
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        private string GetTypeAliasOrName(Type type)
-        {
-            if (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
-            {
-                var t = type.GetGenericArguments()[0];
-                return (typeAlias.TryGetValue(t, out string alias) ? alias : t.Name) + "?";
-            }
-            else
-            {
-                return typeAlias.TryGetValue(type, out string alias) ? alias : type.Name;
-            }
         }
 
         #endregion private function
