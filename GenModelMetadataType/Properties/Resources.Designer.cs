@@ -29,6 +29,12 @@ namespace GenModelMetadataType.Properties
                 assemblyFilePath);
 
         /// <summary>
+        ///     Missing DbContext.
+        /// </summary>
+        public static string AssemblyNotContainDbContext
+            => GetString("AssemblyNotContainDbContext");
+
+        /// <summary>
         ///     Build failed. Use dotnet build to see the errors.
         /// </summary>
         public static string BuildFailed
@@ -59,6 +65,12 @@ namespace GenModelMetadataType.Properties
             => string.Format(
                 GetString("CreateFile", nameof(file)),
                 file);
+
+        /// <summary>
+        ///     Microsoft.EntityFrameworkCore.DbContext
+        /// </summary>
+        public static string DbContextFullName
+            => GetString("DbContextFullName");
 
         /// <summary>
         ///     Unable to retrieve project metadata. Ensure it's an SDK-style project. If you're using a custom BaseIntermediateOutputPath or MSBuildProjectExtensionsPath values, Use the --msbuildprojectextensionspath option.

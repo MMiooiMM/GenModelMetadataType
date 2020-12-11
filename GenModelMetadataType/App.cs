@@ -14,7 +14,6 @@ namespace GenModelMetadataType
 {
     public class App : IHostedService
     {
-        private static readonly string dbContextFullName = "Microsoft.EntityFrameworkCore.DbContext";
         private int? _exitCode;
 
         private readonly ILogger<App> logger;
@@ -42,9 +41,7 @@ namespace GenModelMetadataType
                     c.Option("project", "project", "p", Resources.ProjectOptionDescription);
                     c.OnRun((namedArgs) =>
                     {
-                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
-
-                        var assembly = GetAssemblyFromProject(project);
+                        var assembly = GetAssembly(namedArgs.GetValueOrDefault("project"));
 
                         var dbContextNames = GetDbContextTypesFromAssembly(assembly).ToList().Select(type => GetFullName(type));
 
@@ -63,14 +60,12 @@ namespace GenModelMetadataType
 
                 runner.SubCommand("generate", "generate partial code ", c =>
                 {
-                    c.Option("output", "output", "o", Resources.OutputOptionDescription);
+                    c.Option("output", "output-dir", "o", Resources.OutputOptionDescription);
                     c.Option("project", "project", "p", Resources.ProjectOptionDescription);
                     c.Option("context", "context", "c", Resources.ContextOptionDescription);
                     c.OnRun((namedArgs) =>
                     {
-                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
-
-                        var assembly = GetAssemblyFromProject(project);
+                        var assembly = GetAssembly(namedArgs.GetValueOrDefault("project"));
 
                         var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("context"));
 
@@ -104,6 +99,23 @@ namespace GenModelMetadataType
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// 取得 Assembly
+        /// </summary>
+        /// <param name="projectPath"></param>
+        /// <returns></returns>
+        private Assembly GetAssembly(string projectPath)
+        {
+            var project = GetAndBuildProject(projectPath);
+
+            return GetAssemblyFromProject(project);
+        }
+
+        /// <summary>
+        /// 取得專案資訊並建置專案
+        /// </summary>
+        /// <param name="projectPath"></param>
+        /// <returns></returns>
         private Project GetAndBuildProject(string projectPath)
         {
             var projectFile = ResolveProject(projectPath);
@@ -117,7 +129,12 @@ namespace GenModelMetadataType
             return project;
         }
 
-        private string ResolveProject(string projectPath)
+        /// <summary>
+        /// 取得專案檔，若路徑中有零筆或多筆專案檔，則拋出例外
+        /// </summary>
+        /// <param name="projectPath"></param>
+        /// <returns></returns>
+        private static string ResolveProject(string projectPath)
         {
             var projects = GetProjectFiles(projectPath);
 
@@ -133,7 +150,12 @@ namespace GenModelMetadataType
             };
         }
 
-        private List<string> GetProjectFiles(string path)
+        /// <summary>
+        /// 取得 proj 檔案列表
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private static List<string> GetProjectFiles(string path)
         {
             if (path == null)
             {
@@ -162,7 +184,7 @@ namespace GenModelMetadataType
         /// <param name="path"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        private Assembly GetAssemblyFromProject(Project project)
+        private static Assembly GetAssemblyFromProject(Project project)
         {
             var targetDir = Path.GetFullPath(Path.Combine(project.ProjectDir, project.OutputPath));
 
@@ -188,9 +210,21 @@ namespace GenModelMetadataType
         /// <returns></returns>
         private IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string context)
         {
-            return GetDbContextTypesFromAssembly(assembly)
-                .FirstOrDefault(t => string.IsNullOrWhiteSpace(context) || t.FullName.Equals(context))
-                .GetProperties()
+            var dbContextTypes = GetDbContextTypesFromAssembly(assembly);
+
+            if (!string.IsNullOrWhiteSpace(context))
+            {
+                dbContextTypes = dbContextTypes.Where(t => t.Name.Equals(context));
+            }
+
+            var dbContextType = dbContextTypes.FirstOrDefault();
+
+            if (dbContextType == null)
+            {
+                throw new Exception(Resources.AssemblyNotContainDbContext);
+            }
+
+            return dbContextType.GetProperties()
                 .Where(prop => CheckIfDbSetGenericType(prop.PropertyType))
                 .Select(type => type.PropertyType.GetGenericArguments()[0]);
         }
@@ -211,6 +245,10 @@ namespace GenModelMetadataType
                 Directory.CreateDirectory(outputDir);
             }
 
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Create Files:");
+
             foreach (var type in types)
             {
                 var fileName = $"{type.Name}.Partial.cs";
@@ -218,18 +256,17 @@ namespace GenModelMetadataType
 
                 using StreamWriter sw = new StreamWriter(Path.Combine(outputDir, fileName));
                 sw.Write(fileContent);
-
-                logger.LogInformation(Resources.CreateFile(fileName));
+                sb.AppendLine($"  {fileName}");
             }
+            logger.LogInformation(sb.ToString());
         }
 
         /// <summary>
         /// 從 Assembly 取得 DbContext 的 Type
         /// </summary>
         /// <param name="assembly"></param>
-        /// <param name="context"></param>
         /// <returns></returns>
-        private IEnumerable<Type> GetDbContextTypesFromAssembly(Assembly assembly)
+        private static IEnumerable<Type> GetDbContextTypesFromAssembly(Assembly assembly)
         {
             try
             {
@@ -237,7 +274,7 @@ namespace GenModelMetadataType
             }
             catch (ReflectionTypeLoadException e)
             {
-                return e.Types.Where(t => t != null && t.BaseType.FullName.Contains(dbContextFullName));
+                return e.Types.Where(t => t != null && t.BaseType.FullName.Contains(Resources.DbContextFullName));
             }
         }
 
@@ -268,7 +305,7 @@ namespace GenModelMetadataType
                 {
                     return aggregate + (aggregate == "<" ? "" : ",") + GetFullName(type);
                 }));
-            sb.Append(">");
+            sb.Append('>');
 
             return sb.ToString();
         }

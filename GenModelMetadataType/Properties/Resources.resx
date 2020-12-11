@@ -120,6 +120,9 @@
   <data name="AssemblyFileNotFound" xml:space="preserve">
     <value>Missing {assemblyFilePath}!</value>
   </data>
+  <data name="AssemblyNotContainDbContext" xml:space="preserve">
+    <value>Missing DbContext.</value>
+  </data>
   <data name="BuildFailed" xml:space="preserve">
     <value>Build failed. Use dotnet build to see the errors.</value>
   </data>
@@ -134,6 +137,9 @@
   </data>
   <data name="CreateFile" xml:space="preserve">
     <value>Create {file}.</value>
+  </data>
+  <data name="DbContextFullName" xml:space="preserve">
+    <value>Microsoft.EntityFrameworkCore.DbContext</value>
   </data>
   <data name="GetMetadataFailed" xml:space="preserve">
     <value>Unable to retrieve project metadata. Ensure it's an SDK-style project. If you're using a custom BaseIntermediateOutputPath or MSBuildProjectExtensionsPath values, Use the --msbuildprojectextensionspath option.</value>
