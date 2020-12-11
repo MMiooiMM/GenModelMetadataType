@@ -60,13 +60,13 @@ namespace GenModelMetadataType
                     c.Option("context", "context", "c", "The name of the DbContext class to generate.");
                     c.OnRun((namedArgs) =>
                     {
-                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));                       
+                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
 
                         var assembly = GetAssemblyFromProject(project);
 
-                        var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("output"));
+                        var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("context"));
 
-                        CreateFiles(types, namedArgs.GetValueOrDefault("context"));
+                        CreateFiles(types, namedArgs.GetValueOrDefault("output"));
 
                         return 1;
                     });
@@ -181,7 +181,7 @@ namespace GenModelMetadataType
         private IEnumerable<Type> GetEntityTypesFromAssembly(Assembly assembly, string context)
         {
             return GetDbContextTypesFromAssembly(assembly)
-                .FirstOrDefault(t => t.FullName.Equals(context))
+                .FirstOrDefault(t => string.IsNullOrWhiteSpace(context) || t.FullName.Equals(context))
                 .GetProperties()
                 .Where(prop => CheckIfDbSetGenericType(prop.PropertyType))
                 .Select(type => type.PropertyType.GetGenericArguments()[0]);
@@ -194,7 +194,9 @@ namespace GenModelMetadataType
         /// <param name="output"></param>
         private void CreateFiles(IEnumerable<Type> types, string output)
         {
-            var outputDir = Path.Combine(Directory.GetCurrentDirectory(), output);
+            var outputDir = string.IsNullOrWhiteSpace(output)
+                ? Directory.GetCurrentDirectory()
+                : Path.Combine(Directory.GetCurrentDirectory(), output);
 
             if (!Directory.Exists(outputDir))
             {
