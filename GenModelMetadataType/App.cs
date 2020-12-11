@@ -34,22 +34,14 @@ namespace GenModelMetadataType
 
                 var runner = new CommandRunner("dotnet genmodelmetadatatype", "GenModelMetadataType Command Line Tools", Console.Out);
 
-                runner.SubCommand("list", "show dbContext ", c =>
+                runner.SubCommand("list", "show dbContext type list ", c =>
                 {
                     c.Option("project", "project", "p", "project description");
                     c.OnRun((namedArgs) =>
                     {
-                        var projectFile = ResolveProject(namedArgs.GetValueOrDefault("project"));
+                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
 
-                        var project = Project.FromFile(projectFile, null);
-
-                        logger.LogInformation(Resources.BuildStarted);
-                        project.Build();
-                        logger.LogInformation(Resources.BuildSucceeded);
-
-                        var targetDir = Path.GetFullPath(Path.Combine(project.ProjectDir, project.OutputPath));
-
-                        var assembly = GetAssembly(targetDir, project.TargetFileName);
+                        var assembly = GetAssemblyFromProject(project);
 
                         var dbContextNames = GetDbContextTypesFromAssembly(assembly).ToList().Select(type => GetFullName(type));
 
@@ -68,17 +60,9 @@ namespace GenModelMetadataType
                     c.Option("context", "context", "c", "context description");
                     c.OnRun((namedArgs) =>
                     {
-                        var projectFile = ResolveProject(namedArgs.GetValueOrDefault("project"));
+                        var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));                       
 
-                        var project = Project.FromFile(projectFile, null);
-
-                        logger.LogInformation(Resources.BuildStarted);
-                        project.Build();
-                        logger.LogInformation(Resources.BuildSucceeded);
-
-                        var targetDir = Path.GetFullPath(Path.Combine(project.ProjectDir, project.OutputPath));
-
-                        var assembly = GetAssembly(targetDir, project.TargetFileName);
+                        var assembly = GetAssemblyFromProject(project);
 
                         var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("output"));
 
@@ -110,6 +94,19 @@ namespace GenModelMetadataType
             Environment.ExitCode = _exitCode.GetValueOrDefault(-1);
 
             return Task.CompletedTask;
+        }
+
+        private Project GetAndBuildProject(string projectPath)
+        {
+            var projectFile = ResolveProject(projectPath);
+
+            var project = Project.FromFile(projectFile, null);
+
+            logger.LogInformation(Resources.BuildStarted);
+            project.Build();
+            logger.LogInformation(Resources.BuildSucceeded);
+
+            return project;
         }
 
         private string ResolveProject(string projectPath)
@@ -152,17 +149,20 @@ namespace GenModelMetadataType
         }
 
         /// <summary>
-        /// 取得 Assembly
+        /// 透過 project 取得 Assembly
         /// </summary>
         /// <param name="path"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        private Assembly GetAssembly(string path, string name)
+        private Assembly GetAssemblyFromProject(Project project)
         {
-            string localPath = string.IsNullOrEmpty(path)
+            var targetDir = Path.GetFullPath(Path.Combine(project.ProjectDir, project.OutputPath));
+
+            string localPath = string.IsNullOrEmpty(targetDir)
                 ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-                : path;
-            string assemblyFilePath = Path.Combine(localPath, name);
+                : targetDir;
+
+            string assemblyFilePath = Path.Combine(localPath, project.TargetFileName);
 
             if (!File.Exists(assemblyFilePath))
             {
