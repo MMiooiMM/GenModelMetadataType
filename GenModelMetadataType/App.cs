@@ -39,7 +39,7 @@ namespace GenModelMetadataType
                     c.Option("project", "project", "p", "project description");
                     c.OnRun((namedArgs) =>
                     {
-                        var projectFile = ResolveProject(namedArgs["project"]);
+                        var projectFile = ResolveProject(namedArgs.GetValueOrDefault("project"));
 
                         var project = Project.FromFile(projectFile, null);
 
@@ -68,7 +68,7 @@ namespace GenModelMetadataType
                     c.Option("context", "context", "c", "context description");
                     c.OnRun((namedArgs) =>
                     {
-                        var projectFile = ResolveProject(namedArgs["project"]);
+                        var projectFile = ResolveProject(namedArgs.GetValueOrDefault("project"));
 
                         var project = Project.FromFile(projectFile, null);
 
@@ -80,9 +80,9 @@ namespace GenModelMetadataType
 
                         var assembly = GetAssembly(targetDir, project.TargetFileName);
 
-                        var types = GetEntityTypesFromAssembly(assembly, namedArgs["output"]);
+                        var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("output"));
 
-                        CreateFiles(types, namedArgs["context"]);
+                        CreateFiles(types, namedArgs.GetValueOrDefault("context"));
 
                         return 1;
                     });
