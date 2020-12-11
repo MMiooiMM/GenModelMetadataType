@@ -36,7 +36,7 @@ namespace GenModelMetadataType
 
                 runner.SubCommand("list", "show dbContext type list ", c =>
                 {
-                    c.Option("project", "project", "p", "project description");
+                    c.Option("project", "project", "p", "Relative path to the project folder of the target project. Default value is the current folder.");
                     c.OnRun((namedArgs) =>
                     {
                         var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
@@ -55,9 +55,9 @@ namespace GenModelMetadataType
 
                 runner.SubCommand("generate", "generate partial code ", c =>
                 {
-                    c.Option("output", "output", "o", "output description");
-                    c.Option("project", "project", "p", "project description");
-                    c.Option("context", "context", "c", "context description");
+                    c.Option("output", "output", "o", "The directory to put partial class files in. Paths are relative to the project directory.");
+                    c.Option("project", "project", "p", "Relative path to the project folder of the target project. Default value is the current folder.");
+                    c.Option("context", "context", "c", "The name of the DbContext class to generate.");
                     c.OnRun((namedArgs) =>
                     {
                         var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));                       
