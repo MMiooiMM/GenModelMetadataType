@@ -129,6 +129,9 @@
   <data name="BuildSucceeded" xml:space="preserve">
     <value>Build succeeded.</value>
   </data>
+  <data name="ContextOptionDescription" xml:space="preserve">
+    <value>The name of the DbContext class to generate.</value>
+  </data>
   <data name="CreateFile" xml:space="preserve">
     <value>Create {file}.</value>
   </data>
@@ -146,6 +149,12 @@
   </data>
   <data name="NoProjectInDirectory" xml:space="preserve">
     <value>No project was found in directory '{projectDir}'.</value>
+  </data>
+  <data name="OutputOptionDescription" xml:space="preserve">
+    <value>The directory to put partial class files in. Paths are relative to the project directory.</value>
+  </data>
+  <data name="ProjectOptionDescription" xml:space="preserve">
+    <value>Relative path to the project folder of the target project. Default value is the current folder.</value>
   </data>
   <data name="UnhandledException" xml:space="preserve">
     <value>Unhandled exception!</value>

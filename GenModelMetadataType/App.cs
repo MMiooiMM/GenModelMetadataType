@@ -39,7 +39,7 @@ namespace GenModelMetadataType
 
                 runner.SubCommand("list", "show dbContext type list ", c =>
                 {
-                    c.Option("project", "project", "p", "Relative path to the project folder of the target project. Default value is the current folder.");
+                    c.Option("project", "project", "p", Resources.ProjectOptionDescription);
                     c.OnRun((namedArgs) =>
                     {
                         var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));
@@ -50,10 +50,10 @@ namespace GenModelMetadataType
 
                         var sb = new StringBuilder();
 
-                        foreach(var dbContextName in dbContextNames)
+                        foreach (var dbContextName in dbContextNames)
                         {
                             sb.AppendLine(dbContextName);
-                        }                        
+                        }
 
                         logger.LogInformation(sb.ToString());
 
@@ -63,9 +63,9 @@ namespace GenModelMetadataType
 
                 runner.SubCommand("generate", "generate partial code ", c =>
                 {
-                    c.Option("output", "output", "o", "The directory to put partial class files in. Paths are relative to the project directory.");
-                    c.Option("project", "project", "p", "Relative path to the project folder of the target project. Default value is the current folder.");
-                    c.Option("context", "context", "c", "The name of the DbContext class to generate.");
+                    c.Option("output", "output", "o", Resources.OutputOptionDescription);
+                    c.Option("project", "project", "p", Resources.ProjectOptionDescription);
+                    c.Option("context", "context", "c", Resources.ContextOptionDescription);
                     c.OnRun((namedArgs) =>
                     {
                         var project = GetAndBuildProject(namedArgs.GetValueOrDefault("project"));

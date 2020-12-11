@@ -47,6 +47,12 @@ namespace GenModelMetadataType.Properties
             => GetString("BuildSucceeded");
 
         /// <summary>
+        ///     The name of the DbContext class to generate.
+        /// </summary>
+        public static string ContextOptionDescription
+            => GetString("ContextOptionDescription");
+
+        /// <summary>
         ///     Create {file}.
         /// </summary>
         public static string CreateFile([CanBeNull] object? file)
@@ -87,6 +93,18 @@ namespace GenModelMetadataType.Properties
             => string.Format(
                 GetString("NoProjectInDirectory", nameof(projectDir)),
                 projectDir);
+
+        /// <summary>
+        ///     The directory to put partial class files in. Paths are relative to the project directory.
+        /// </summary>
+        public static string OutputOptionDescription
+            => GetString("OutputOptionDescription");
+
+        /// <summary>
+        ///     Relative path to the project folder of the target project. Default value is the current folder.
+        /// </summary>
+        public static string ProjectOptionDescription
+            => GetString("ProjectOptionDescription");
 
         /// <summary>
         ///     Unhandled exception!
