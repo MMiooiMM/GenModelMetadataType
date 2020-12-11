@@ -30,7 +30,7 @@ namespace GenModelMetadataType
         {
             try
             {
-                logger.LogWarning("Worker running at: {time}", DateTimeOffset.Now);
+                logger.LogWarning(Resources.WorkerStarted(DateTimeOffset.Now));
 
                 var runner = new CommandRunner("dotnet genmodelmetadatatype", "GenModelMetadataType Command Line Tools", Console.Out);
 
@@ -76,7 +76,7 @@ namespace GenModelMetadataType
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Unhandled exception!");
+                logger.LogError(ex, Resources.UnhandledException);
                 _exitCode = 1;
             }
             finally
@@ -89,7 +89,7 @@ namespace GenModelMetadataType
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogWarning("Worker stopped at: {time}", DateTimeOffset.Now);
+            logger.LogWarning(Resources.WorkerStopped(DateTimeOffset.Now));
 
             Environment.ExitCode = _exitCode.GetValueOrDefault(-1);
 
@@ -166,7 +166,7 @@ namespace GenModelMetadataType
 
             if (!File.Exists(assemblyFilePath))
             {
-                throw new Exception($"Missing {assemblyFilePath}");
+                throw new Exception(Resources.AssemblyFileNotFound(assemblyFilePath));
             }
 
             return Assembly.LoadFrom(assemblyFilePath);
@@ -209,7 +209,7 @@ namespace GenModelMetadataType
                 using StreamWriter sw = new StreamWriter(Path.Combine(outputDir, fileName));
                 sw.Write(fileContent);
 
-                logger.LogInformation($"create {fileName}.");
+                logger.LogInformation(Resources.CreateFile(fileName));
             }
         }
 
