@@ -32,7 +32,10 @@ namespace GenModelMetadataType
             {
                 logger.LogWarning(Resources.WorkerStarted(DateTimeOffset.Now));
 
-                var runner = new CommandRunner("dotnet genmodelmetadatatype", "GenModelMetadataType Command Line Tools", Console.Out);
+                var runner = new CommandRunner(
+                    "dotnet genmodelmetadatatype",
+                    "GenModelMetadataType Command Line Tools",
+                    logger);
 
                 runner.SubCommand("list", "show dbContext type list ", c =>
                 {
@@ -45,9 +48,14 @@ namespace GenModelMetadataType
 
                         var dbContextNames = GetDbContextTypesFromAssembly(assembly).ToList().Select(type => GetFullName(type));
 
-                        var message = string.Join("\n", dbContextNames);
+                        var sb = new StringBuilder();
 
-                        logger.LogInformation(message);
+                        foreach(var dbContextName in dbContextNames)
+                        {
+                            sb.AppendLine(dbContextName);
+                        }                        
+
+                        logger.LogInformation(sb.ToString());
 
                         return 1;
                     });

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace GenModelMetadataType
 {
@@ -10,16 +12,16 @@ namespace GenModelMetadataType
         private readonly List<CommandOption> _optionDescriptors;
         private Func<IDictionary<string, string>, int> _runFunc;
         private readonly List<CommandRunner> _subRunners;
-        private readonly TextWriter _output;
+        private readonly ILogger<App> _logger;
 
-        public CommandRunner(string commandName, string commandDescription, TextWriter output)
+        public CommandRunner(string commandName, string commandDescription, ILogger<App> logger)
         {
             CommandName = commandName;
             CommandDescription = commandDescription;
+            _logger = logger;
             _optionDescriptors = new List<CommandOption>();
-            _runFunc = (namedArgs) => { return 1; }; // noop
+            _runFunc = (namedArgs) => { return 1; };
             _subRunners = new List<CommandRunner>();
-            _output = output;
         }
 
         public string CommandName { get; private set; }
@@ -44,7 +46,7 @@ namespace GenModelMetadataType
 
         public void SubCommand(string name, string description, Action<CommandRunner> configAction)
         {
-            var runner = new CommandRunner($"{CommandName} {name}", description, _output);
+            var runner = new CommandRunner($"{CommandName} {name}", description, _logger);
             configAction(runner);
             _subRunners.Add(runner);
         }
@@ -71,7 +73,6 @@ namespace GenModelMetadataType
             namedArgs = new Dictionary<string, string>();
             var argsQueue = new Queue<string>(args);
 
-            // Process options first
             while (argsQueue.Any())
             {
                 var name = argsQueue.Dequeue();
@@ -84,13 +85,13 @@ namespace GenModelMetadataType
                 }
 
                 var optionPrefixLength = isLongOption ? 2 : 1;
-                var optionName = name.Substring(optionPrefixLength);
+                var optionName = name[optionPrefixLength..];
 
-                var option = _optionDescriptors.FirstOrDefault(d => isLongOption 
-                    ? d.LongName == optionName 
+                var option = _optionDescriptors.FirstOrDefault(d => isLongOption
+                    ? d.LongName == optionName
                     : d.ShortName == optionName);
 
-                if(option is null || string.IsNullOrWhiteSpace(argsQueue.Peek()))
+                if (option is null || string.IsNullOrWhiteSpace(argsQueue.Peek()))
                 {
                     return false;
                 }
@@ -98,43 +99,38 @@ namespace GenModelMetadataType
                 namedArgs.Add(option.ValueName, argsQueue.Dequeue());
             }
 
-            return argsQueue.Count() == 0;
+            return argsQueue.Count == 0;
         }
 
         private void PrintUsage()
         {
+            var sb = new StringBuilder();
             if (_subRunners.Any())
             {
-                // List sub commands
-                _output.WriteLine(CommandDescription);
-                _output.WriteLine("Commands:");
+                sb.AppendLine(CommandDescription);
+                sb.AppendLine("Commands:");
                 foreach (var runner in _subRunners)
                 {
-                    var shortName = runner.CommandName.Split(' ').Last();
-                    if (shortName.StartsWith("_")) continue; // convention to hide commands
-                    _output.WriteLine($"  {shortName}:  {runner.CommandDescription}");
+                    var shortName = runner.CommandName.Split(' ')[^1];
+                    sb.AppendLine($"  {shortName}:  {runner.CommandDescription}");
                 }
-                _output.WriteLine();
             }
             else
             {
-                // Usage for this command
                 var optionsPart = _optionDescriptors.Any() ? "[options] " : "";
-                _output.WriteLine($"Usage: {CommandName} {optionsPart}");
-                _output.WriteLine();
+                sb.AppendLine($"Usage: {CommandName} {optionsPart}");
+                sb.AppendLine();
 
-                // Options
                 if (_optionDescriptors.Any())
                 {
-                    _output.WriteLine("options:");
+                    sb.AppendLine("options:");
                     foreach (var option in _optionDescriptors)
                     {
-                        _output.WriteLine($" --{option.LongName} | -{option.ShortName}:  {option.Description}");
+                        sb.AppendLine($"  --{option.LongName} | -{option.ShortName}:  {option.Description}");
                     }
-
-                    _output.WriteLine();
                 }
             }
+            _logger.LogInformation(sb.ToString());
         }
     }
 }
