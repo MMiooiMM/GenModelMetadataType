@@ -29,7 +29,7 @@ namespace GenModelMetadataType
         {
             try
             {
-                logger.LogWarning(Resources.WorkerStarted(DateTimeOffset.Now));
+                logger.LogInformation(Resources.WorkerStarted(DateTimeOffset.Now));
 
                 var runner = new CommandRunner(
                     "dotnet genmodelmetadatatype",
@@ -92,7 +92,7 @@ namespace GenModelMetadataType
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogWarning(Resources.WorkerStopped(DateTimeOffset.Now));
+            logger.LogInformation(Resources.WorkerStopped(DateTimeOffset.Now));
 
             Environment.ExitCode = _exitCode.GetValueOrDefault(-1);
 
