@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -25,14 +24,15 @@ namespace GenModelMetadataType
 
         public string CommandDescription { get; private set; }
 
-        public void Option(string valueName, string longName, string shortName, string description)
+        public void Option(string valueName, string longName, string shortName, string description, bool isFlag = false)
         {
             _optionDescriptors.Add(new CommandOption
             {
                 ValueName = valueName,
                 LongName = longName,
                 ShortName = shortName,
-                Description = description
+                Description = description,
+                IsFlag = isFlag
             });
         }
 
@@ -91,12 +91,25 @@ namespace GenModelMetadataType
                     ? d.LongName == optionName
                     : d.ShortName == optionName);
 
-                if (option is null || string.IsNullOrWhiteSpace(argsQueue.Peek()))
+                if (option is null)
                 {
                     return false;
                 }
 
-                namedArgs.Add(option.ValueName, argsQueue.Dequeue());
+                if (option.IsFlag)
+                {
+                    namedArgs.Add(option.ValueName, null);
+                    continue;
+                }
+
+                if (argsQueue.TryDequeue(out string arg))
+                {
+                    namedArgs.Add(option.ValueName, arg);
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             return argsQueue.Count == 0;

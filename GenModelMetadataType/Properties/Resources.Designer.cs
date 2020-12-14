@@ -81,6 +81,12 @@ namespace GenModelMetadataType.Properties
                 path, fileNames);
 
         /// <summary>
+        ///     Overwrite existing files.
+        /// </summary>
+        public static string ForceOptionDescription
+            => GetString("ForceOptionDescription");
+
+        /// <summary>
         ///     Unable to retrieve project metadata. Ensure it's an SDK-style project. If you're using a custom BaseIntermediateOutputPath or MSBuildProjectExtensionsPath values, Use the --msbuildprojectextensionspath option.
         /// </summary>
         public static string GetMetadataFailed

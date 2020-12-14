@@ -60,13 +60,14 @@ namespace GenModelMetadataType
                     c.Option("output", "output-dir", "o", Resources.OutputOptionDescription);
                     c.Option("project", "project", "p", Resources.ProjectOptionDescription);
                     c.Option("context", "context", "c", Resources.ContextOptionDescription);
+                    c.Option("force", "force", "f", Resources.ForceOptionDescription, true);
                     c.OnRun((namedArgs) =>
                     {
                         var assembly = GetAssembly(namedArgs.GetValueOrDefault("project"));
 
                         var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("context"));
 
-                        CreateFiles(types, namedArgs.GetValueOrDefault("output"));
+                        CreateFiles(types, namedArgs.GetValueOrDefault("output"), namedArgs.ContainsKey("force"));
 
                         return 1;
                     });
@@ -236,7 +237,8 @@ namespace GenModelMetadataType
         /// </summary>
         /// <param name="types"></param>
         /// <param name="output"></param>
-        private void CreateFiles(IEnumerable<Type> types, string output)
+        /// <param name="force"></param>
+        private void CreateFiles(IEnumerable<Type> types, string output, bool force)
         {
             var outputDir = string.IsNullOrWhiteSpace(output)
                 ? Directory.GetCurrentDirectory()
@@ -247,14 +249,12 @@ namespace GenModelMetadataType
                 Directory.CreateDirectory(outputDir);
             }
 
-            if (CheckIfAnyFileExisted(types, outputDir, out string fileNames))
+            if (!force && CheckIfAnyFileExisted(types, outputDir, out string fileNames))
             {
                 throw new CommandException(Resources.FileIsExisted(outputDir, fileNames));
             }
 
             var sb = new StringBuilder();
-
-            sb.AppendLine("Create Files:");
 
             foreach (var type in types)
             {
@@ -263,7 +263,7 @@ namespace GenModelMetadataType
                 var filePath = Path.Combine(outputDir, fileName);
                 using StreamWriter sw = new StreamWriter(filePath);
                 sw.Write(fileContent);
-                sb.AppendLine($"  {filePath}");
+                sb.AppendLine($"{(force ? "Overwriting" : "Creating")}{filePath}");
             }
             Reporter.WriteVerbose(sb.ToString());
         }
