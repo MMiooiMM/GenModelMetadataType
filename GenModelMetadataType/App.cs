@@ -77,6 +77,11 @@ namespace GenModelMetadataType
 
                 _exitCode = runner.Run(Environment.GetCommandLineArgs().Skip(1));
             }
+            catch (CommandException ex)
+            {
+                Console.WriteLine(ex.Message);
+                _exitCode = 1;
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex, Resources.UnhandledException);
@@ -140,10 +145,10 @@ namespace GenModelMetadataType
 
             return projects.Count switch
             {
-                0 => throw new Exception(projectPath != null
+                0 => throw new CommandException(projectPath != null
                     ? Resources.NoProjectInDirectory(projectPath)
                     : Resources.NoProject),
-                > 1 => throw new Exception(projectPath != null
+                > 1 => throw new CommandException(projectPath != null
                     ? Resources.MultipleProjectsInDirectory(projectPath)
                     : Resources.MultipleProjects),
                 _ => projects[0],
