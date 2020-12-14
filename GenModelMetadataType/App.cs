@@ -29,12 +29,9 @@ namespace GenModelMetadataType
         {
             try
             {
-                logger.LogInformation(Resources.WorkerStarted(DateTimeOffset.Now));
+                logger.LogTrace(Resources.WorkerStarted(DateTimeOffset.Now));
 
-                var runner = new CommandRunner(
-                    "dotnet genmodelmetadatatype",
-                    "GenModelMetadataType Command Line Tools",
-                    Console.Out);
+                var runner = new CommandRunner("dotnet genmodelmetadatatype", "GenModelMetadataType Command Line Tools");
 
                 runner.SubCommand("list", "show dbContext type list ", c =>
                 {
@@ -52,7 +49,7 @@ namespace GenModelMetadataType
                             sb.AppendLine(dbContextName);
                         }
 
-                        Console.WriteLine(sb.ToString());
+                        Reporter.WriteInformation(sb.ToString());
 
                         return 1;
                     });
@@ -79,7 +76,7 @@ namespace GenModelMetadataType
             }
             catch (CommandException ex)
             {
-                Console.WriteLine(ex.Message);
+                Reporter.WriteError(ex.Message);
                 _exitCode = 1;
             }
             catch (Exception ex)
@@ -97,7 +94,7 @@ namespace GenModelMetadataType
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation(Resources.WorkerStopped(DateTimeOffset.Now));
+            logger.LogTrace(Resources.WorkerStopped(DateTimeOffset.Now));
 
             Environment.ExitCode = _exitCode.GetValueOrDefault(-1);
 
@@ -127,9 +124,9 @@ namespace GenModelMetadataType
 
             var project = Project.FromFile(projectFile, null);
 
-            logger.LogInformation(Resources.BuildStarted);
+            Reporter.WriteInformation(Resources.BuildStarted);
             project.Build();
-            logger.LogInformation(Resources.BuildSucceeded);
+            Reporter.WriteInformation(Resources.BuildSucceeded);
 
             return project;
         }
@@ -250,6 +247,11 @@ namespace GenModelMetadataType
                 Directory.CreateDirectory(outputDir);
             }
 
+            if (CheckIfAnyFileExisted(types, outputDir, out string fileNames))
+            {
+                throw new CommandException(Resources.FileIsExisted(outputDir, fileNames));
+            }
+
             var sb = new StringBuilder();
 
             sb.AppendLine("Create Files:");
@@ -258,12 +260,26 @@ namespace GenModelMetadataType
             {
                 var fileName = $"{type.Name}.Partial.cs";
                 var fileContent = GeneratePartialCodeContent(type);
-
-                using StreamWriter sw = new StreamWriter(Path.Combine(outputDir, fileName));
+                var filePath = Path.Combine(outputDir, fileName);
+                using StreamWriter sw = new StreamWriter(filePath);
                 sw.Write(fileContent);
-                sb.AppendLine($"  {fileName}");
+                sb.AppendLine($"  {filePath}");
             }
-            Console.WriteLine(sb.ToString());
+            Reporter.WriteVerbose(sb.ToString());
+        }
+
+        /// <summary>
+        /// 檢查是否有已存在的檔案，若有則傳回 true，並組合相關字串
+        /// </summary>
+        /// <param name="types"></param>
+        /// <param name="outputDir"></param>
+        /// <param name="fileNames"></param>
+        /// <returns></returns>
+        private static bool CheckIfAnyFileExisted(IEnumerable<Type> types, string outputDir, out string fileNames)
+        {
+            var existFile = types.Select(type => $"{type.Name}.Partial.cs").Where(fileName => File.Exists(Path.Combine(outputDir, fileName)));
+            fileNames = string.Join(", ", existFile) + ".";
+            return existFile.Any();
         }
 
         /// <summary>

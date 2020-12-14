@@ -141,6 +141,9 @@
   <data name="DbContextFullName" xml:space="preserve">
     <value>Microsoft.EntityFrameworkCore.DbContext</value>
   </data>
+  <data name="FileIsExisted" xml:space="preserve">
+    <value>The following file(s) already exist in directory '{path}': {fileNames} Use the Force flag to overwrite these files.</value>
+  </data>
   <data name="GetMetadataFailed" xml:space="preserve">
     <value>Unable to retrieve project metadata. Ensure it's an SDK-style project. If you're using a custom BaseIntermediateOutputPath or MSBuildProjectExtensionsPath values, Use the --msbuildprojectextensionspath option.</value>
   </data>

@@ -73,6 +73,14 @@ namespace GenModelMetadataType.Properties
             => GetString("DbContextFullName");
 
         /// <summary>
+        ///     The following file(s) already exist in directory '{path}': {fileNames} Use the Force flag to overwrite these files.
+        /// </summary>
+        public static string FileIsExisted([CanBeNull] object? path, [CanBeNull] object? fileNames)
+            => string.Format(
+                GetString("FileIsExisted", nameof(path), nameof(fileNames)),
+                path, fileNames);
+
+        /// <summary>
         ///     Unable to retrieve project metadata. Ensure it's an SDK-style project. If you're using a custom BaseIntermediateOutputPath or MSBuildProjectExtensionsPath values, Use the --msbuildprojectextensionspath option.
         /// </summary>
         public static string GetMetadataFailed
