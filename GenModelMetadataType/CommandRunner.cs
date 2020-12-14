@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
 namespace GenModelMetadataType
 {
@@ -55,8 +54,11 @@ namespace GenModelMetadataType
         {
             if (args.Any())
             {
-                var subRunner = _subRunners.FirstOrDefault(r => r.CommandName.Split(' ').Last() == args.First());
-                if (subRunner != null) return subRunner.Run(args.Skip(1));
+                var subRunner = _subRunners.FirstOrDefault(r => args.Any(arg => arg == r.CommandName.Split(' ').Last()));
+                if (subRunner != null)
+                {
+                    return subRunner.Run(args.SkipWhile(arg => arg == subRunner.CommandName.Split(' ').Last()));
+                }
             }
 
             if (_subRunners.Any() || !TryParseArgs(args, out IDictionary<string, string> namedArgs))
