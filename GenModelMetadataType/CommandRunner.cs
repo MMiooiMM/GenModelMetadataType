@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -11,13 +12,13 @@ namespace GenModelMetadataType
         private readonly List<CommandOption> _optionDescriptors;
         private Func<IDictionary<string, string>, int> _runFunc;
         private readonly List<CommandRunner> _subRunners;
-        private readonly ILogger<App> _logger;
+        private readonly TextWriter output;
 
-        public CommandRunner(string commandName, string commandDescription, ILogger<App> logger)
+        public CommandRunner(string commandName, string commandDescription, TextWriter output)
         {
             CommandName = commandName;
             CommandDescription = commandDescription;
-            _logger = logger;
+            this.output = output;
             _optionDescriptors = new List<CommandOption>();
             _runFunc = (namedArgs) => { return 1; };
             _subRunners = new List<CommandRunner>();
@@ -45,7 +46,7 @@ namespace GenModelMetadataType
 
         public void SubCommand(string name, string description, Action<CommandRunner> configAction)
         {
-            var runner = new CommandRunner($"{CommandName} {name}", description, _logger);
+            var runner = new CommandRunner($"{CommandName} {name}", description, output);
             configAction(runner);
             _subRunners.Add(runner);
         }
@@ -129,7 +130,7 @@ namespace GenModelMetadataType
                     }
                 }
             }
-            _logger.LogInformation(sb.ToString());
+            output.WriteLine(sb.ToString());
         }
     }
 }

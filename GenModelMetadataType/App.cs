@@ -34,7 +34,7 @@ namespace GenModelMetadataType
                 var runner = new CommandRunner(
                     "dotnet genmodelmetadatatype",
                     "GenModelMetadataType Command Line Tools",
-                    logger);
+                    Console.Out);
 
                 runner.SubCommand("list", "show dbContext type list ", c =>
                 {
@@ -52,7 +52,7 @@ namespace GenModelMetadataType
                             sb.AppendLine(dbContextName);
                         }
 
-                        logger.LogInformation(sb.ToString());
+                        Console.WriteLine(sb.ToString());
 
                         return 1;
                     });
@@ -258,7 +258,7 @@ namespace GenModelMetadataType
                 sw.Write(fileContent);
                 sb.AppendLine($"  {fileName}");
             }
-            logger.LogInformation(sb.ToString());
+            Console.WriteLine(sb.ToString());
         }
 
         /// <summary>
