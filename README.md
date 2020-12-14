@@ -25,3 +25,5 @@ GenModelMetadataType 針對 Entity Framework Tool 產生的 Model 類別進行�
 |--project \<PROJECT\>|-p|目標專案之專案資料夾的相對路徑。 預設值為目前的資料夾。|
 |--context \<NAME\>|-c|目標 DbContext 的類別名稱。 預設值為專案檔中的第一筆。|
 |--output-dir \<PATH\>|-o|要放置實體類別檔案的相對路徑。 預設值為目前的資料夾。|
+|--force|-f|覆寫既有檔案。|
+|--verbose|-v|輸出執行時的資訊。|
