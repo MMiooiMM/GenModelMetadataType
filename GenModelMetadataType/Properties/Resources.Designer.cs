@@ -139,6 +139,12 @@ namespace GenModelMetadataType.Properties
             => GetString("UnhandledException");
 
         /// <summary>
+        ///     Show verbose output.
+        /// </summary>
+        public static string VerboseOptionDescription
+            => GetString("VerboseOptionDescription");
+
+        /// <summary>
         ///     Worker starting at: {time}.
         /// </summary>
         public static string WorkerStarted([CanBeNull] object? time)

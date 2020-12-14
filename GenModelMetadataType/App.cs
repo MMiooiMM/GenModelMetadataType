@@ -61,8 +61,11 @@ namespace GenModelMetadataType
                     c.Option("project", "project", "p", Resources.ProjectOptionDescription);
                     c.Option("context", "context", "c", Resources.ContextOptionDescription);
                     c.Option("force", "force", "f", Resources.ForceOptionDescription, true);
+                    c.Option("verbose", "verbose", "v", Resources.ForceOptionDescription, true);
                     c.OnRun((namedArgs) =>
                     {
+                        Reporter.IsVerbose = namedArgs.ContainsKey("verbose");
+
                         var assembly = GetAssembly(namedArgs.GetValueOrDefault("project"));
 
                         var types = GetEntityTypesFromAssembly(assembly, namedArgs.GetValueOrDefault("context"));
@@ -263,7 +266,7 @@ namespace GenModelMetadataType
                 var filePath = Path.Combine(outputDir, fileName);
                 using StreamWriter sw = new StreamWriter(filePath);
                 sw.Write(fileContent);
-                sb.AppendLine($"{(force ? "Overwriting" : "Creating")}{filePath}");
+                sb.AppendLine($"{(force ? "Overwriting" : "Creating")} {filePath}");
             }
             Reporter.WriteVerbose(sb.ToString());
         }

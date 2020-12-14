@@ -171,6 +171,9 @@
   <data name="UnhandledException" xml:space="preserve">
     <value>Unhandled exception!</value>
   </data>
+  <data name="VerboseOptionDescription" xml:space="preserve">
+    <value>Show verbose output.</value>
+  </data>
   <data name="WorkerStarted" xml:space="preserve">
     <value>Worker starting at: {time}.</value>
   </data>
